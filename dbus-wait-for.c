@@ -111,15 +111,14 @@ static void usage(FILE *f) {
 "Exec COMMAND, wait (with TIMEOUT) for NAME to appear on bus,\n"
 "write readiness in FD or in file descriptor referenced by ENV.\n"
 "\n"
-"If available, the program by default uses system-specific interfaces\n"
+"If requested, the program can use system-specific interfaces\n"
 "(e.g. cgroups) for tracking forks and ensuring race-free operation.\n"
-"This can optionally be overridden.\n"
 "\n"
 "      -h          Print this message and exit.\n"
 "      -e ENV      The environment variable with the file descriptor.\n"
 "      -f FD       The file descriptor to write to.\n"
 "      -n NAME     The bus name to wait for.\n"
-"      -p          Always do an exact PID check.\n"
+"      -P          Try to use cgroups etc. when available.\n"
 "      -s          Use the system bus (session bus is default).\n"
 "      -t TIMEOUT  How long to wait in seconds (default: %d, 0 to disable).\n",
         __progname, TIMEOUT_SECS
@@ -429,7 +428,7 @@ int main(int argc, char **argv) {
     unsigned long timeout_s = TIMEOUT_SECS;
     int c, timeout;
 #if HAVE_CGROUPS
-    int do_cgr_check = 1;
+    int do_cgr_check = 0;
 #endif
     pid_t p;
 
@@ -438,7 +437,7 @@ int main(int argc, char **argv) {
     bd.pid_serial = 0;
     bd.parent_pid = getpid();
 
-    while ((c = getopt(argc, argv, "e:f:hn:pst:")) > 0) {
+    while ((c = getopt(argc, argv, "e:f:hn:Pst:")) > 0) {
         switch (c) {
             case 'h':
                 usage(stdout);
@@ -461,7 +460,7 @@ err_fd:
                 break;
             case 'p':
 #if HAVE_CGROUPS
-                do_cgr_check = 0;
+                do_cgr_check = 1;
 #endif
                 break;
             case 's':
@@ -528,7 +527,6 @@ err_fd:
 #if HAVE_CGROUPS
     /* when tracking cgroups, check what the parent belongs to first */
     if (do_cgr_check) {
-        FILE *procs;
         int cfd = -1;
         /* now open the filesystem */
         cgr_fd = cgr_fsopen();
@@ -550,23 +548,6 @@ err_fd:
         }
         close(cgr_fd);
         cgr_fd = cfd;
-        /* cgroup check is only reliable if the parent process is the sole
-         * member of the cgroup at the time we start, it means it's likely
-         * a service-manager-handled slice and any new processes appearing
-         * in it are child processes of the service
-         *
-         * if there's multiple, it might really be any combo of stuff
-         */
-        procs = cgr_procs_fopen(cgr_fd);
-        if (!procs) {
-            err(1, "could not get cgroup processes");
-        }
-        if (cgr_check(procs, bd.parent_pid) != 1) {
-            fclose(procs);
-            close(cgr_fd);
-            cgr_fd = -1;
-        }
-        fclose(procs);
     }
 no_cgr:
 #endif

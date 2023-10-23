@@ -74,22 +74,23 @@ This has a few possible drawbacks:
 ### cgroups
 
 This is implemented on Linux only. Using cgroups to do the check will mitigate
-both scenarios. Instead of checking the exact PID, we can do a cgroups check
-provided the following:
+both scenarios, if applicable and enabled. Instead of checking the exact PID,
+we can do a cgroups check provided the following:
 
 1) The `dbus-wait-for` belongs to a control group.
 2) A cgroups v2 filesystem is mounted, and the group the process belongs to
    is a v2 control group. Any v1 groups are ignored and no v1 checks are
    implemented.
-3) During startup (before any fork), the `dbus-wait-for` program is alone in
-   the control group. If it's not alone, we fall back to the plain PID check
-   as it means the control group is not a slice reserved for the service.
 
-If these are true, the cgroups check is done in place of the PID check, unless
-a PID check is explicitly requested. A file descriptor to the control group
-is obtained early on and retained for the check across forks. Then instead
-of comparing PIDs, the control group's process list is scanned for the owner
-PID of the name and if it's found, the check passes.
+If these are true, the cgroups check can be done in place of the PID check
+if requested. A file descriptor to the control group is obtained early on
+and retained for the check across forks. Then instead of comparing PIDs,
+the control group's process list is scanned for the owner PID of the name
+and if it's found, the check passes.
+
+Note you probably only really want to do a cgroups-based check if you can
+guarantee that the service has a group for itself, or if there is no chance
+of name clashes between processes in the group.
 
 ## Building
 
