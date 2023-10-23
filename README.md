@@ -19,6 +19,19 @@ can be the value of a given environment variable.
 A timeout can be specified (with 1-second granularity). The default timeout
 is 1 minute, to match Dinit's default service readiness timeout.
 
+## Invocation
+
+An example invocation would be as such:
+
+```
+$ dbus-wait-for -n org.test.Server -f 4 my-command arg1 arg2 ... 4> ready.txt
+```
+
+This waits for `my-command` to register a name `org.test.Server` on the
+default session bus and when it does so, writes the readiness message
+on file descriptor 4. You will see `READY=1` in `ready.txt` once that
+has happened.
+
 ## How it works
 
 First, the program obtains a D-Bus connection. This is done early so that
