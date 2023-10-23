@@ -5,8 +5,8 @@ managers and various scripts.
 
 You run a program through it, and it waits for the program to register the
 given name on the bus (session bus by default, but system bus can be used
-as well); once that has happened, it writes the string `READY=1\n` on the
-given file descriptor.
+as well, or even a custom address); once that has happened, it writes the
+string `READY=1\n` on the given file descriptor.
 
 Checking is done to ensure the registration originated in the program. See
 below for possible caveats.

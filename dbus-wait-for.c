@@ -114,7 +114,11 @@ static void usage(FILE *f) {
 "If requested, the program can use system-specific interfaces\n"
 "(e.g. cgroups) for tracking forks and ensuring race-free operation.\n"
 "\n"
+"Besides a system and session bus, the program can also connect to a\n"
+"specific address if given; this is purely optional.\n"
+"\n"
 "      -h          Print this message and exit.\n"
+"      -a ADDRESS  The address to connect to.\n"
 "      -e ENV      The environment variable with the file descriptor.\n"
 "      -f FD       The file descriptor to write to.\n"
 "      -n NAME     The bus name to wait for.\n"
@@ -424,6 +428,7 @@ int main(int argc, char **argv) {
     DBusBusType bt = DBUS_BUS_SESSION;
     DBusError derr;
     DBusConnection *conn;
+    char const *addr = NULL;
     struct BusData bd;
     unsigned long timeout_s = TIMEOUT_SECS;
     int c, timeout;
@@ -442,6 +447,9 @@ int main(int argc, char **argv) {
             case 'h':
                 usage(stdout);
                 return 0;
+            case 'a':
+                addr = optarg;
+                break;
             case 'e':
                 bd.fd = get_fd(getenv(optarg));
                 goto err_fd;
@@ -505,7 +513,11 @@ err_fd:
 
     dbus_error_init(&derr);
 
-    conn = dbus_bus_get(bt, &derr);
+    if (addr) {
+        conn = dbus_connection_open(addr, &derr);
+    } else {
+        conn = dbus_bus_get(bt, &derr);
+    }
     if (!conn) {
         errx(1, "connection error (%s)", derr.message);
     }
@@ -574,8 +586,11 @@ no_cgr:
                 break;
             }
         }
+        dbus_connection_unref(conn);
         return 0;
     }
+    /* unref the connection */
+    dbus_connection_unref(conn);
     /* original parent; reap forked child first */
     while (waitpid(p, NULL, 0) < 0) {
         if (errno != EINTR) {
