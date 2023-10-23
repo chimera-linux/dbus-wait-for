@@ -476,7 +476,7 @@ err_fd:
                 break;
             }
             default:
-                warnx("invalid option -- '%c'", c);
+                fprintf(stderr, "\n");
                 usage(stderr);
                 return 1;
         }
@@ -490,10 +490,14 @@ err_fd:
     }
 
     if (bd.fd < 0) {
-        errx(1, "no file descriptor given");
+        warnx("no file descriptor given\n");
+        usage(stderr);
+        return 1;
     }
     if (!bd.name) {
-        errx(1, "no bus name given");
+        warnx("no bus name given\n");
+        usage(stderr);
+        return 1;
     }
 
     /* establish as much as we can early on to reduce error handling
