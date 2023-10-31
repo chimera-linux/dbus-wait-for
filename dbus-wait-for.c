@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
     bd.pid_serial = 0;
     bd.parent_pid = getpid();
 
-    while ((c = getopt(argc, argv, "e:f:hn:Pst:")) > 0) {
+    while ((c = getopt(argc, argv, "a:e:f:hn:Pst:")) > 0) {
         switch (c) {
             case 'h':
                 usage(stdout);
@@ -466,7 +466,7 @@ err_fd:
                     errx(1, "invalid bus name given");
                 }
                 break;
-            case 'p':
+            case 'P':
 #if HAVE_CGROUPS
                 do_cgr_check = 1;
 #endif
