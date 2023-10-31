@@ -521,6 +521,9 @@ err_fd:
     if (!conn) {
         errx(1, "connection error (%s)", derr.message);
     }
+
+    dbus_connection_set_exit_on_disconnect(conn, FALSE);
+
     dbus_bus_add_match(
         conn,
         "type='signal',"
