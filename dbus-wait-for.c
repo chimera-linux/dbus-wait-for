@@ -388,11 +388,13 @@ static DBusHandlerResult filter_cb(
         DBUS_TYPE_STRING, &new_owner,
         DBUS_TYPE_INVALID
     )) {
+        dbus_message_unref(nmsg);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
     /* do the call asynchronously, receive reply later in the mainloop */
     if (!dbus_connection_send(conn, nmsg, NULL)) {
         /* could not send */
+        dbus_message_unref(nmsg);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
     /* update reply serial; that means we are currently handling the bus
@@ -400,6 +402,7 @@ static DBusHandlerResult filter_cb(
      * received, it will get reset)
      */
     bd->pid_serial = dbus_message_get_serial(nmsg);
+    dbus_message_unref(nmsg);
     /* we've handled it */
     return DBUS_HANDLER_RESULT_HANDLED;
 }
