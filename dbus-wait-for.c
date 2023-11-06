@@ -416,7 +416,7 @@ static int get_fd(char const *str) {
     fd = strtoul(str, &end, 10);
     if (fd && end && !*end && (fd <= INT_MAX)) {
         int tfd = (int)fd;
-        if (!fcntl(tfd, F_GETFD) && (errno != EBADF)) {
+        if (fcntl(tfd, F_GETFD) >= 0) {
             if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
                 close(tfd);
                 return -1;
