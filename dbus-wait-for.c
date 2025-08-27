@@ -257,9 +257,6 @@ static int cgr_check(FILE *f, uint32_t pid) {
     char *ln;
     size_t plen;
     int oth = 0;
-    if (!f) {
-        return 0;
-    }
     snprintf(buf2, sizeof(buf2), "%u", pid);
     plen = strlen(buf2);
     while ((ln = fgets(buf, sizeof(buf), f))) {
@@ -268,12 +265,10 @@ static int cgr_check(FILE *f, uint32_t pid) {
             continue;
         }
         if (!ln[plen] || (ln[plen] == '\n')) {
-            fclose(f);
             return oth + 1;
         }
         oth = 1;
     }
-    fclose(f);
     return 0;
 }
 #endif
